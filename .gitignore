@@ -16,6 +16,10 @@ build/
 .vscode/
 *.swp
 *.swo
+.classpath
+.project
+.settings/
+bin/
 
 ### macOS ###
 .DS_Store
