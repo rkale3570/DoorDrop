@@ -37,6 +37,18 @@ public class Payment {
     @Column(name = "transaction_id", unique = true)
     private String transactionId;
 
+    /** Razorpay order ID returned when creating the payment session. */
+    @Column(name = "razorpay_order_id")
+    private String razorpayOrderId;
+
+    /** Razorpay payment ID received after successful checkout. */
+    @Column(name = "razorpay_payment_id")
+    private String razorpayPaymentId;
+
+    /** HMAC-SHA256 signature stored for audit/verification record. */
+    @Column(name = "razorpay_signature")
+    private String razorpaySignature;
+
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 

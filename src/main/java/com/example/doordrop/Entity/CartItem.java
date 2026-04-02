@@ -26,6 +26,20 @@ public class CartItem {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    /**
+     * Kirana store this item is sourced from — set for DOORDROP_NOW items, null for MARKETPLACE.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id")
+    private Store store;
+
+    /**
+     * Inventory row that locks price + stock — set for DOORDROP_NOW items, null for MARKETPLACE.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_inventory_id")
+    private StoreInventory storeInventory;
+
     @Column(nullable = false)
     private Integer quantity;
 

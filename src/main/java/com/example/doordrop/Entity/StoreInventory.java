@@ -45,6 +45,11 @@ public class StoreInventory {
     @Builder.Default
     private boolean isAvailable = true;
 
+    /** Store owner is alerted when quantity drops to or below this threshold. */
+    @Column(name = "low_stock_threshold")
+    @Builder.Default
+    private Integer lowStockThreshold = 5;
+
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;

@@ -45,6 +45,10 @@ public class Seller {
     private String state;
     private String pincode;
 
+    /** GPS coordinates for distance-based shipping cost calculation. */
+    private Double latitude;
+    private Double longitude;
+
     @Column(name = "average_rating")
     @Builder.Default
     private Double averageRating = 0.0;
