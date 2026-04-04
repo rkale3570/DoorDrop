@@ -1,0 +1,9 @@
+.git
+.gradle
+build/
+FrontEnd/
+DoorDropMobile/
+*.md
+*.log
+.DS_Store
+bin/

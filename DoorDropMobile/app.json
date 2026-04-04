@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "DoorDrop",
+    "slug": "doordrop",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#4F46E5"
+    },
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.doordrop.app",
+      "config": {
+        "googleMapsApiKey": "REPLACE_WITH_YOUR_GOOGLE_MAPS_IOS_KEY"
+      },
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "DoorDrop uses your location to show nearby stores and track your delivery.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "DoorDrop uses your location in the background to broadcast real-time delivery position."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#4F46E5"
+      },
+      "package": "com.doordrop.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": "REPLACE_WITH_YOUR_GOOGLE_MAPS_ANDROID_KEY"
+        }
+      },
+      "permissions": []
+    },
+    "plugins": [
+      "expo-font"
+    ]
+  }
+}

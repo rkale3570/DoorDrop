@@ -23,6 +23,7 @@ bin/
 
 ### macOS ###
 .DS_Store
+**/.DS_Store
 
 ### Logs ###
 *.log
@@ -31,3 +32,26 @@ logs/
 ### Environment / secrets ###
 application-local.properties
 application-prod.properties
+
+### React Native / Expo ###
+DoorDropMobile/node_modules/
+DoorDropMobile/.expo/
+DoorDropMobile/.expo-shared/
+DoorDropMobile/web-build/
+DoorDropMobile/dist/
+DoorDropMobile/package-lock.json
+
+### Android build artifacts ###
+DoorDropMobile/android/build/
+DoorDropMobile/android/app/build/
+DoorDropMobile/android/.gradle/
+DoorDropMobile/android/app/debug.keystore
+
+### iOS build artifacts ###
+DoorDropMobile/ios/build/
+DoorDropMobile/ios/Pods/
+
+### Frontend ###
+FrontEnd/node_modules/
+FrontEnd/dist/
+FrontEnd/.env.local
