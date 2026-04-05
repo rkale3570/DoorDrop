@@ -1,6 +1,6 @@
 // ── Enums (mirrors backend) ───────────────────────────────────────────────────
 
-export type UserRole = 'CUSTOMER' | 'STORE_OWNER' | 'SELLER' | 'DELIVERY_AGENT';
+export type UserRole = 'CUSTOMER' | 'STORE_OWNER' | 'SELLER' | 'DELIVERY_AGENT' | 'ADMIN';
 export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY_FOR_PICKUP' | 'PICKED_UP' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'CANCELLED';
 export type OrderType = 'DOORDROP_NOW' | 'MARKETPLACE';
 export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED' | 'COD_PENDING';
@@ -51,6 +51,7 @@ export interface NearbyStoreResponse {
   openTime: string;
   closeTime: string;
   distanceKm: number;
+  isApproved: boolean;
 }
 
 // ── Products (Kirana) ─────────────────────────────────────────────────────────
@@ -257,16 +258,48 @@ export interface MarketplaceProductResponse {
   shippingEstimate?: ShippingEstimateResponse;
 }
 
+// ── Store Onboarding ──────────────────────────────────────────────────────────
+
+export interface StoreOnboardingRequest {
+  name: string;
+  ownerName: string;
+  phone: string;
+  email?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  latitude: number;
+  longitude: number;
+  deliveryRadiusKm?: number;
+  openTime?: string;
+  closeTime?: string;
+}
+
+export interface CreateProductWithInventoryRequest {
+  name: string;
+  description?: string;
+  sku?: string;
+  categoryId?: number;
+  mrp?: number;
+  imageUrl?: string;
+  unit: string;
+  weightKg?: number;
+  quantity: number;
+  price: number;
+  lowStockThreshold?: number;
+}
+
 export interface MarketplaceProductRequest {
   name: string;
   description?: string;
+  sku?: string;
   categoryId?: number;
   basePrice: number;
   mrp?: number;
   imageUrl?: string;
-  unit?: string;
+  unit: string;
   weightKg: number;
-  stockQty: number;
 }
 
 // ── Seller ────────────────────────────────────────────────────────────────────
@@ -293,13 +326,13 @@ export interface SellerProfileResponse {
 export interface SellerOnboardingRequest {
   businessName: string;
   gstNumber?: string;
-  phone: string;
+  phone?: string;
   street: string;
   city: string;
   state: string;
   pincode: string;
-  latitude: number;
-  longitude: number;
+  latitude?: number;
+  longitude?: number;
 }
 
 // ── Live Tracking ─────────────────────────────────────────────────────────────

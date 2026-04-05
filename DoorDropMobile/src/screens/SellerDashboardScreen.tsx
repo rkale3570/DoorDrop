@@ -2,20 +2,26 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Animated, ActivityIndicator, Alert, RefreshControl,
+  Modal, TextInput, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  Package, TrendingUp, ChevronRight, Plus, Edit,
-  CheckCircle, Clock, Truck, AlertTriangle, LogOut,
+  Package, TrendingUp, Plus, Edit,
+  CheckCircle, Clock, Truck, LogOut, X,
 } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../theme/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/apiClient';
 import {
-  MarketplaceProductResponse, SellerOrderGroupResponse,
-  SellerProfileResponse, SellerOrderStatus,
+  MarketplaceProductResponse, MarketplaceProductRequest,
+  SellerOrderGroupResponse, SellerProfileResponse, SellerOrderStatus,
 } from '../api/types';
+import { RootStackParamList } from '../navigation/AppNavigator';
+
+type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 // ── Animation helper ──────────────────────────────────────────────────────────
 
@@ -47,6 +53,7 @@ const statusMap: Record<string, StatusCfg> = {
 // ── SellerDashboardScreen ─────────────────────────────────────────────────────
 
 const SellerDashboardScreen = () => {
+  const navigation = useNavigation<Nav>();
   const { colors } = useTheme();
   const { user, logout } = useAuth();
   const s = makeStyles(colors);
@@ -57,6 +64,49 @@ const SellerDashboardScreen = () => {
   const [profile, setProfile] = useState<SellerProfileResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  // ── Add Product modal ──────────────────────────────────────────────────────
+  const [showModal, setShowModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({
+    name: '', description: '', basePrice: '', mrp: '', unit: '', weightKg: '',
+  });
+
+  const resetForm = () => setForm({ name: '', description: '', basePrice: '', mrp: '', unit: '', weightKg: '' });
+
+  const handleAddProduct = async () => {
+    if (!form.name.trim()) { Alert.alert('Validation', 'Product name is required.'); return; }
+    if (!form.basePrice || isNaN(Number(form.basePrice)) || Number(form.basePrice) <= 0) {
+      Alert.alert('Validation', 'Enter a valid base price.'); return;
+    }
+    if (!form.unit.trim()) { Alert.alert('Validation', 'Unit is required (e.g. piece, kg, litre).'); return; }
+    if (!form.weightKg || isNaN(Number(form.weightKg)) || Number(form.weightKg) <= 0) {
+      Alert.alert('Validation', 'Enter a valid weight in kg.'); return;
+    }
+
+    const payload: MarketplaceProductRequest = {
+      name: form.name.trim(),
+      description: form.description.trim() || undefined,
+      basePrice: Number(form.basePrice),
+      mrp: form.mrp ? Number(form.mrp) : undefined,
+      unit: form.unit.trim(),
+      weightKg: Number(form.weightKg),
+    };
+
+    try {
+      setSubmitting(true);
+      const { data } = await apiClient.post<MarketplaceProductResponse>('/api/marketplace/products', payload);
+      setProducts(prev => [data, ...prev]);
+      setShowModal(false);
+      resetForm();
+      Alert.alert('Success', `"${data.name}" has been listed.`);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? 'Could not add product. Please try again.';
+      Alert.alert('Error', msg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -69,10 +119,12 @@ const SellerDashboardScreen = () => {
       setProducts(productsRes.data);
       setProfile(profileRes.data);
     } catch (err: any) {
-      // Profile not set up yet is fine — show onboarding prompt
-      if (err?.response?.status !== 404) {
-        Alert.alert('Error', 'Could not load data. Pull down to refresh.');
+      if (err?.response?.status === 404) {
+        // First-time seller — redirect to setup
+        navigation.replace('ShopSetup');
+        return;
       }
+      Alert.alert('Error', 'Could not load data. Pull down to refresh.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -104,11 +156,13 @@ const SellerDashboardScreen = () => {
       {/* Header */}
       <View style={s.header}>
         <View style={s.headerLeft}>
-          <LinearGradient colors={[...colors.gradientGold]} style={s.avatar} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-            <Text style={[s.avatarText, { color: colors.primaryForeground }]}>
-              {user?.name?.[0]?.toUpperCase() ?? 'S'}
-            </Text>
-          </LinearGradient>
+          <TouchableOpacity onPress={() => navigation.navigate('Account')}>
+            <LinearGradient colors={[...colors.gradientGold]} style={s.avatar} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+              <Text style={[s.avatarText, { color: colors.primaryForeground }]}>
+                {user?.name?.[0]?.toUpperCase() ?? 'S'}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
           <View>
             <Text style={[s.headerTitle, { color: colors.foreground }]}>Seller Dashboard</Text>
             <Text style={[s.headerSub, { color: colors.mutedForeground }]}>
@@ -199,7 +253,7 @@ const SellerDashboardScreen = () => {
           <>
             <FadeIn>
               <LinearGradient colors={[...colors.gradientGold]} style={s.addBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-                <TouchableOpacity style={s.addBtnInner}>
+                <TouchableOpacity style={s.addBtnInner} onPress={() => setShowModal(true)}>
                   <Plus size={16} color={colors.primaryForeground} />
                   <Text style={[s.addBtnText, { color: colors.primaryForeground }]}>Add New Product</Text>
                 </TouchableOpacity>
@@ -273,6 +327,112 @@ const SellerDashboardScreen = () => {
               </EmptyState>
         )}
       </ScrollView>
+
+      {/* ── Add Product Modal ────────────────────────────────────────────── */}
+      <Modal visible={showModal} animationType="slide" onRequestClose={() => setShowModal(false)}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, backgroundColor: colors.background }}>
+          {/* Modal Header */}
+          <View style={[s.modalHeader, { borderBottomColor: colors.border, paddingTop: Platform.OS === 'android' ? 40 : 16 }]}>
+            <Text style={[s.modalTitle, { color: colors.foreground }]}>New Product Listing</Text>
+            <TouchableOpacity onPress={() => { setShowModal(false); resetForm(); }}>
+              <X size={20} color={colors.foreground} />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView contentContainerStyle={s.modalContent} keyboardShouldPersistTaps="handled">
+            {/* Name */}
+            <View style={s.fieldGroup}>
+              <Text style={[s.fieldLabel, { color: colors.foreground }]}>Product Name <Text style={{ color: colors.destructive }}>*</Text></Text>
+              <TextInput
+                style={[s.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.foreground }]}
+                placeholder="e.g. Wireless Earbuds Pro"
+                placeholderTextColor={colors.mutedForeground}
+                value={form.name}
+                onChangeText={v => setForm(f => ({ ...f, name: v }))}
+              />
+            </View>
+
+            {/* Description */}
+            <View style={s.fieldGroup}>
+              <Text style={[s.fieldLabel, { color: colors.foreground }]}>Description</Text>
+              <TextInput
+                style={[s.input, s.inputMultiline, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.foreground }]}
+                placeholder="Brief product description..."
+                placeholderTextColor={colors.mutedForeground}
+                value={form.description}
+                onChangeText={v => setForm(f => ({ ...f, description: v }))}
+                multiline
+                numberOfLines={3}
+                textAlignVertical="top"
+              />
+            </View>
+
+            {/* Price row */}
+            <View style={s.fieldRow}>
+              <View style={[s.fieldGroup, { flex: 1 }]}>
+                <Text style={[s.fieldLabel, { color: colors.foreground }]}>Base Price (₹) <Text style={{ color: colors.destructive }}>*</Text></Text>
+                <TextInput
+                  style={[s.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.foreground }]}
+                  placeholder="0"
+                  placeholderTextColor={colors.mutedForeground}
+                  keyboardType="decimal-pad"
+                  value={form.basePrice}
+                  onChangeText={v => setForm(f => ({ ...f, basePrice: v }))}
+                />
+              </View>
+              <View style={[s.fieldGroup, { flex: 1 }]}>
+                <Text style={[s.fieldLabel, { color: colors.foreground }]}>MRP (₹)</Text>
+                <TextInput
+                  style={[s.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.foreground }]}
+                  placeholder="0"
+                  placeholderTextColor={colors.mutedForeground}
+                  keyboardType="decimal-pad"
+                  value={form.mrp}
+                  onChangeText={v => setForm(f => ({ ...f, mrp: v }))}
+                />
+              </View>
+            </View>
+
+            {/* Unit & Weight row */}
+            <View style={s.fieldRow}>
+              <View style={[s.fieldGroup, { flex: 1 }]}>
+                <Text style={[s.fieldLabel, { color: colors.foreground }]}>Unit <Text style={{ color: colors.destructive }}>*</Text></Text>
+                <TextInput
+                  style={[s.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.foreground }]}
+                  placeholder="piece, kg, litre…"
+                  placeholderTextColor={colors.mutedForeground}
+                  value={form.unit}
+                  onChangeText={v => setForm(f => ({ ...f, unit: v }))}
+                />
+              </View>
+              <View style={[s.fieldGroup, { flex: 1 }]}>
+                <Text style={[s.fieldLabel, { color: colors.foreground }]}>Weight (kg) <Text style={{ color: colors.destructive }}>*</Text></Text>
+                <TextInput
+                  style={[s.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.foreground }]}
+                  placeholder="0.5"
+                  placeholderTextColor={colors.mutedForeground}
+                  keyboardType="decimal-pad"
+                  value={form.weightKg}
+                  onChangeText={v => setForm(f => ({ ...f, weightKg: v }))}
+                />
+              </View>
+            </View>
+
+            {/* Submit */}
+            <LinearGradient colors={[...colors.gradientGold]} style={[s.addBtn, { marginTop: 8 }]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+              <TouchableOpacity style={s.addBtnInner} onPress={handleAddProduct} disabled={submitting}>
+                {submitting
+                  ? <ActivityIndicator color={colors.primaryForeground} />
+                  : <>
+                      <Plus size={16} color={colors.primaryForeground} />
+                      <Text style={[s.addBtnText, { color: colors.primaryForeground }]}>List Product</Text>
+                    </>
+                }
+              </TouchableOpacity>
+            </LinearGradient>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -335,6 +495,15 @@ const makeStyles = (colors: any) => StyleSheet.create({
   activeBadge: { borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2 },
   activeBadgeText: { fontSize: 10, fontWeight: '600' },
   editBtn: { width: 34, height: 34, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  // Modal
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
+  modalTitle: { fontSize: 17, fontWeight: '700', fontStyle: 'italic' },
+  modalContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40, gap: 16 },
+  fieldGroup: { gap: 6 },
+  fieldRow: { flexDirection: 'row', gap: 12 },
+  fieldLabel: { fontSize: 13, fontWeight: '600' },
+  input: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14 },
+  inputMultiline: { paddingTop: 10, minHeight: 80 },
   // Profile
   profileCard: { borderRadius: 16, borderWidth: 1, padding: 20, gap: 8 },
   profileTitle: { fontSize: 18, fontWeight: '700' },

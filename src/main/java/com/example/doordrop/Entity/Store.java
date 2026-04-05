@@ -69,6 +69,10 @@ public class Store {
     @Builder.Default
     private boolean isActive = true;
 
+    @Column(name = "is_approved")
+    @Builder.Default
+    private boolean isApproved = false;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

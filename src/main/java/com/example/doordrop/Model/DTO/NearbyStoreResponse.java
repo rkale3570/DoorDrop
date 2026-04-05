@@ -1,6 +1,7 @@
 package com.example.doordrop.Model.DTO;
 
 import com.example.doordrop.Entity.Store;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -28,6 +29,9 @@ public class NearbyStoreResponse {
     /** Straight-line distance in km from the user's delivery address. */
     private Double distanceKm;
 
+    @JsonProperty("isApproved")
+    private boolean isApproved;
+
     public static NearbyStoreResponse from(Store store, double distanceKm) {
         return NearbyStoreResponse.builder()
                 .id(store.getId())
@@ -46,6 +50,7 @@ public class NearbyStoreResponse {
                 .openTime(store.getOpenTime())
                 .closeTime(store.getCloseTime())
                 .distanceKm(Math.round(distanceKm * 100.0) / 100.0)
+                .isApproved(store.isApproved())
                 .build();
     }
 }

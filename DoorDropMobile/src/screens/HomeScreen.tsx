@@ -9,6 +9,7 @@ import {
   Dimensions,
   Animated,
   Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -19,6 +20,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../theme/ThemeContext';
+import { useCart } from '../context/CartContext';
 import { RootStackParamList } from '../navigation/AppNavigator';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -40,10 +42,10 @@ const categories = [
 ];
 
 const quickProducts = [
-  { name: 'Amul Taza Milk', weight: '500ml', price: 27, oldPrice: 30, img: '🥛', rating: 4.5, deliveryTime: '8 min' },
-  { name: 'Fresh Paneer', weight: '200g', price: 80, oldPrice: 95, img: '🧀', rating: 4.3, deliveryTime: '10 min' },
-  { name: 'Brown Bread', weight: '400g', price: 45, oldPrice: 50, img: '🍞', rating: 4.6, deliveryTime: '8 min' },
-  { name: 'Organic Eggs', weight: '6 pcs', price: 72, oldPrice: 85, img: '🥚', rating: 4.7, deliveryTime: '12 min' },
+  { productId: 1, storeId: 1, name: 'Amul Taza Milk', weight: '500ml', price: 27, oldPrice: 30, img: '🥛', rating: 4.5, deliveryTime: '8 min' },
+  { productId: 2, storeId: 1, name: 'Fresh Paneer', weight: '200g', price: 80, oldPrice: 95, img: '🧀', rating: 4.3, deliveryTime: '10 min' },
+  { productId: 3, storeId: 1, name: 'Brown Bread', weight: '400g', price: 45, oldPrice: 50, img: '🍞', rating: 4.6, deliveryTime: '8 min' },
+  { productId: 4, storeId: 1, name: 'Organic Eggs', weight: '6 pcs', price: 72, oldPrice: 85, img: '🥚', rating: 4.7, deliveryTime: '12 min' },
 ];
 
 const trendingProducts = [
@@ -108,9 +110,18 @@ const FadeInView = ({
 
 const DoorDropNow = () => {
   const { colors } = useTheme();
+  const { addToCart } = useCart();
   const s = makeStyles(colors);
   const colW = (MAX_WIDTH - 32 - 9) / 4;
   const prodW = (MAX_WIDTH - 32 - 12) / 2;
+
+  const handleAddToCart = async (productId: number, storeId: number) => {
+    try {
+      await addToCart({ productId, storeId, quantity: 1 });
+    } catch {
+      Alert.alert('Error', 'Could not add item to cart.');
+    }
+  };
 
   return (
     <View style={s.section}>
@@ -197,9 +208,11 @@ const DoorDropNow = () => {
                       <Text style={[s.price, { color: colors.foreground }]}>₹{product.price}</Text>
                       <Text style={[s.oldPrice, { color: colors.mutedForeground }]}>₹{product.oldPrice}</Text>
                     </View>
-                    <LinearGradient colors={[...colors.gradientGold]} style={s.addBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-                      <Text style={[s.addBtnText, { color: colors.primaryForeground }]}>+</Text>
-                    </LinearGradient>
+                    <TouchableOpacity onPress={() => handleAddToCart(product.productId, product.storeId)}>
+                      <LinearGradient colors={[...colors.gradientGold]} style={s.addBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                        <Text style={[s.addBtnText, { color: colors.primaryForeground }]}>+</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
                   </View>
                 </View>
               </View>
@@ -310,12 +323,13 @@ const HomeScreen = () => {
   const [activeTab, setActiveTab] = React.useState<'now' | 'shop'>('now');
   const navigation = useNavigation<Nav>();
   const { theme, toggleTheme, colors } = useTheme();
+  const { itemCount } = useCart();
   const s = makeStyles(colors);
 
   const navItems = [
     { icon: <Zap size={20} color={activeTab === 'now' ? colors.primary : colors.mutedForeground} />, label: 'Home', route: null as null },
     { icon: <Search size={20} color={colors.mutedForeground} />, label: 'Explore', route: null as null },
-    { icon: <ShoppingCart size={20} color={colors.mutedForeground} />, label: 'Cart', route: 'Cart' as const, badge: 3 },
+    { icon: <ShoppingCart size={20} color={colors.mutedForeground} />, label: 'Cart', route: 'Cart' as const, badge: itemCount > 0 ? itemCount : null },
     { icon: <User size={20} color={colors.mutedForeground} />, label: 'Account', route: 'Account' as const },
   ];
 
@@ -344,7 +358,10 @@ const HomeScreen = () => {
               <Bell size={20} color={colors.mutedForeground} />
               <View style={[s.notifDot, { backgroundColor: colors.primary }]} />
             </TouchableOpacity>
-            <TouchableOpacity style={[s.iconBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}>
+            <TouchableOpacity
+              style={[s.iconBtn, { backgroundColor: colors.surfaceElevated, borderColor: colors.border }]}
+              onPress={() => navigation.navigate('Account')}
+            >
               <User size={16} color={colors.mutedForeground} />
             </TouchableOpacity>
           </View>

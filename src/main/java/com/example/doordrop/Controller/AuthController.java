@@ -34,4 +34,14 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
+
+    /**
+     * POST /api/auth/logout
+     * Requires: Authorization: Bearer <token>
+     * JWT is stateless — actual invalidation happens client-side by discarding the token.
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout() {
+        return ResponseEntity.noContent().build();
+    }
 }

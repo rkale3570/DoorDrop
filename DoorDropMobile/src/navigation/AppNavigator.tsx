@@ -14,8 +14,21 @@ import AccountScreen from '../screens/AccountScreen';
 import AdminScreen from '../screens/AdminScreen';
 import SellerDashboardScreen from '../screens/SellerDashboardScreen';
 import DeliveryAgentScreen from '../screens/DeliveryAgentScreen';
+import ShopSetupScreen from '../screens/ShopSetupScreen';
+import PendingApprovalScreen from '../screens/PendingApprovalScreen';
 
 // ── Param lists (exported so screens can import them) ─────────────────────────
+
+export type RootStackParamList = {
+  Home: undefined;
+  Cart: undefined;
+  Account: undefined;
+  StoreAdmin: undefined;
+  ShopSetup: undefined;
+  PendingApproval: undefined;
+  SellerDashboard: undefined;
+  DeliveryAgent: undefined;
+};
 
 export type AuthStackParamList = {
   Login: undefined;
@@ -30,10 +43,17 @@ export type CustomerStackParamList = {
 
 export type StoreOwnerStackParamList = {
   StoreAdmin: undefined;
+  ShopSetup: undefined;
+  PendingApproval: undefined;
+  Account: undefined;
+  Home: undefined;
+  Cart: undefined;
 };
 
 export type SellerStackParamList = {
   SellerDashboard: undefined;
+  ShopSetup: undefined;
+  Account: undefined;
 };
 
 export type DeliveryStackParamList = {
@@ -72,6 +92,11 @@ const CustomerNavigator = () => (
 const StoreOwnerNavigator = () => (
   <StoreOwnerStack.Navigator screenOptions={{ headerShown: false }}>
     <StoreOwnerStack.Screen name="StoreAdmin" component={AdminScreen} />
+    <StoreOwnerStack.Screen name="ShopSetup" component={ShopSetupScreen} />
+    <StoreOwnerStack.Screen name="PendingApproval" component={PendingApprovalScreen} />
+    <StoreOwnerStack.Screen name="Account" component={AccountScreen} />
+    <StoreOwnerStack.Screen name="Home" component={HomeScreen} />
+    <StoreOwnerStack.Screen name="Cart" component={CartScreen} />
   </StoreOwnerStack.Navigator>
 );
 
@@ -80,6 +105,8 @@ const StoreOwnerNavigator = () => (
 const SellerNavigator = () => (
   <SellerStack.Navigator screenOptions={{ headerShown: false }}>
     <SellerStack.Screen name="SellerDashboard" component={SellerDashboardScreen} />
+    <SellerStack.Screen name="ShopSetup" component={ShopSetupScreen} />
+    <SellerStack.Screen name="Account" component={AccountScreen} />
   </SellerStack.Navigator>
 );
 
@@ -97,7 +124,6 @@ const AppNavigator = () => {
   const { user, isLoading } = useAuth();
   const { colors } = useTheme();
 
-  // Show a blank splash while AsyncStorage restores the session
   if (isLoading) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
